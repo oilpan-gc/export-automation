@@ -19,7 +19,7 @@ INTERESTING_PATHS = [
 
 origin_url = 'https://chromium.googlesource.com/v8/v8.git'
 # TODO(v8:10724): Add GitHub destination url.
-destination_url = 'TODO'
+destination_url = 'git@github.com:oilpan-gc/cppgc.git'
 
 # This workflow syncs cppgc source inside V8's googlesource repo with GitHub.
 core.workflow(
