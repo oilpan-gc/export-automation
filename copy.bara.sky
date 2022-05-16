@@ -29,7 +29,7 @@ core.workflow(
         url=origin_url,
         ref='master',
     ),
-    destination=git.destination(url=destination_url, ),
+    destination=git.destination(url=destination_url, ref='main'),
     origin_files=glob(INTERESTING_PATHS,
                       exclude=['samples/cppgc/cppgc-for-v8-embedders.cc']),
     destination_files=glob(['**'], exclude=['CMakeLists.txt', 'cmake/**']),
