@@ -63,7 +63,7 @@ function cleanup {
 trap "exit 1" HUP INT PIPE QUIT TERM
 trap cleanup EXIT
 
-[ ! -x $copybara_exe ] && fail "$copybara_exe doesn't exist or was not found in PATH!"
+# [ ! -x $copybara_exe ] && fail "$copybara_exe doesn't exist or was not found in PATH!"
 [ ! -f $copybara_file ] && fail "Input $copybara_file doesn't exist!"
 
 git_temp_dir=$(mktemp -d)
@@ -90,32 +90,33 @@ fi
 
 cd $git_temp_dir
 
-main_gn="BUILD.gn"
-test_gn="test/unittests/BUILD.gn"
-gen_cmake="tools/cppgc/gen_cmake.py"
+cp "$source_dir/bazel/BUILD.bazel" "$git_temp_dir/BUILD.bazel"
+cp "$source_dir/bazel/WORKSPACE" "$git_temp_dir/WORKSPACE"
+cp "$source_dir/bazel/deps.bzl" "$git_temp_dir/deps.bzl"
+cp "$source_dir/bazel/bazelrc" "$git_temp_dir/.bazelrc"
 
-message "Checking out BUILD.gn files..."
-git remote add v8_origin "$v8_origin"
-git fetch --depth=1 v8_origin $v8_ref
-git checkout v8_origin/master -- "$main_gn" "$test_gn" "$gen_cmake" \
-  || fail "Failed to checkout BUILD.gn from V8 origin"
-
-message "Generating CMakeLists.txt..."
-cmakelists="$git_temp_dir/CMakeLists.txt"
-$gen_cmake --out=$cmakelists --main-gn=$main_gn --test-gn=$test_gn \
-  || fail "CMakeLists.txt generation has failed!"
-
-git rm -f $main_gn $test_gn $gen_cmake > /dev/null
-
-if git status -s | grep -q $(basename $cmakelists); then
-  message "CMakeLists.txt needs to be changed"
-  git add $cmakelists
+if git status -s | grep -q BUILD.bazel; then
+  message "BUILD.bazel needs to be changed"
+  git add "$git_temp_dir/BUILD.bazel" "$git_temp_dir/WORKSPACE" "$git_temp_dir/deps.bzl" "$git_temp_dir/.bazelrc"
   git commit --amend --no-edit > /dev/null
 else
-  message "No changes in CMakeLists.txt need to be done"
+  message "No changes in BUILD.bazel need to be done"
+fi
+
+chromium_trace_common_header="$git_temp_dir/src/base/chromium/trace_event_common.h"
+
+mkdir -p $(dirname $chromium_trace_common_header)
+curl "https://raw.githubusercontent.com/chromium/chromium/main/base/trace_event/common/trace_event_common.h" -SLo "$chromium_trace_common_header"
+
+if git status -s | grep -q chromium; then
+  message "trace_event_common.h needs to be changed"
+  git add "$chromium_trace_common_header"
+  git commit --amend --no-edit > /dev/null
+else
+  message "No changes in trace_event_common.h need to be done"
 fi
 
 message "Pushing changes to GitHub..."
-git push copybara_remote master
+git push -f copybara_remote master
 
 success "CppGC GitHub mirror was successfully updated"

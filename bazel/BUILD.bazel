@@ -1,0 +1,105 @@
+config_setting(
+    name = "linux_x86_64",
+    constraint_values = [
+        "@platforms//os:linux",
+        "@platforms//cpu:x86_64",
+    ],
+)
+
+config_setting(
+    name = "macos_x86_64",
+    constraint_values = [
+        "@platforms//os:macos",
+        "@platforms//cpu:x86_64",
+    ],
+)
+
+config_setting(
+    name = "macos_arm64",
+    constraint_values = [
+        "@platforms//os:macos",
+        "@platforms//cpu:arm64",
+    ],
+)
+
+# TODO: Support all the platforms v8 does.
+PLATFORM_SRCS = select({
+  ":linux_x86_64": [
+    "src/base/platform/platform-posix.cc",
+    "src/base/platform/platform-posix.h",
+    "src/base/platform/platform-posix-time.cc",
+    "src/base/platform/platform-posix-time.h",
+    "src/base/debug/stack_trace_posix.cc",
+    "src/base/platform/platform-linux.cc",
+    "src/heap/base/asm/x64/push_registers_asm.cc",
+  ],
+  ":macos_x86_64": [
+    "src/base/platform/platform-posix.cc",
+    "src/base/platform/platform-posix.h",
+    "src/base/platform/platform-posix-time.cc",
+    "src/base/platform/platform-posix-time.h",
+    "src/base/debug/stack_trace_posix.cc",
+    "src/base/platform/platform-macos.cc",
+    "src/heap/base/asm/x64/push_registers_asm.cc",
+  ],
+  ":macos_arm64": [
+    "src/base/platform/platform-posix.cc",
+    "src/base/platform/platform-posix.h",
+    "src/base/platform/platform-posix-time.cc",
+    "src/base/platform/platform-posix-time.h",
+    "src/base/debug/stack_trace_posix.cc",
+    "src/base/platform/platform-macos.cc",
+    "src/heap/base/asm/arm64/push_registers_asm.cc",
+  ],
+})
+
+PLATFORM_LINKOPTS = select({
+  ":linux_x86_64": [
+    "-lpthread",
+  ],
+  ":macos_x86_64": [
+    "-lpthread",
+  ],
+  ":macos_arm64": [
+    "-lpthread",
+  ],
+})
+
+cc_library(
+  name = "cppgc",
+  hdrs = glob(["include/**/*.h"]),
+  strip_include_prefix = "include",
+  srcs = glob(
+    [
+      "src/**/*.h",
+      "src/**/*.cc",
+    ],
+    exclude = [
+      "src/base/win32-headers.h",
+      "src/base/platform/platform-*.cc",
+      "src/base/platform/platform-*.h",
+      "src/base/debug/stack_trace_*.cc",
+      "src/base/ubsan.cc",
+      "src/heap/base/asm/**/*.cc",
+    ]
+  ) + PLATFORM_SRCS,
+  # TODO: Enforce -std=c++14
+  # TODO: Support -DCPPGC_ENABLE_OBJECT_NAMES, -DCPPGC_YOUNG_GENERATION and -DCPPGC_ENABLE_VERIFY_HEAP as features?
+  copts = [
+    "-DCPPGC_CAGED_HEAP", # NOTE: This is only supported on 64bit targets
+    "-DCPPGC_IS_STANDALONE",
+  ],
+  linkopts = PLATFORM_LINKOPTS,
+  deps = [
+    "@com_google_googletest//:gtest_prod",
+  ],
+  visibility = ["//visibility:public"],
+)
+
+cc_binary(
+  name = "cppgc_sample",
+  srcs = ["samples/cppgc/hello-world.cc"],
+  deps = [":cppgc"]
+)
+
+# TODO: Port tests to bazel

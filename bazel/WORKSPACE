@@ -1,0 +1,5 @@
+workspace(name = "cppgc")
+
+load("@cppgc//:deps.bzl", "cppgc_deps")
+
+cppgc_deps()
