@@ -8,6 +8,7 @@ INTERESTING_PATHS = [
     'LICENSE',
     'samples/cppgc/**',
     'src/base/**',
+    'src/libplatform/**',
     'src/heap/base/**',
     'src/heap/cppgc/**',
     'include/cppgc/**',
@@ -29,7 +30,7 @@ core.workflow(
         url=origin_url,
         ref='master',
     ),
-    destination=git.destination(url=destination_url, ref='main'),
+    destination=git.destination(url=destination_url, push='main'),
     origin_files=glob(INTERESTING_PATHS,
                       exclude=['samples/cppgc/cppgc-for-v8-embedders.cc']),
     destination_files=glob(['**'], exclude=['CMakeLists.txt', 'cmake/**']),
@@ -40,6 +41,11 @@ core.workflow(
         core.replace(
             before = '#include "testing/gtest/include/gtest/gtest_prod.h"  // nogncheck',
             after = '#include "gtest/gtest_prod.h"',
+            paths = glob(["src/**/*.cc", "src/**/*.h"]),
+        ),
+        core.replace(
+            before = '#include <include/cppgc/default-platform.h>',
+            after = '#include "cppgc/default-platform.h"',
             paths = glob(["src/**/*.cc", "src/**/*.h"]),
         ),
         core.replace(

@@ -16,4 +16,5 @@ def cppgc_deps():
     name = "com_google_googletest",
     urls = ["https://github.com/google/googletest/archive/5126f7166109666a9c0534021fb1a3038659494c.zip"],
     strip_prefix = "googletest-5126f7166109666a9c0534021fb1a3038659494c",
+    sha256 = "d09a503599da941e4990e4ca4adf7b17e26823087cbd14df1742c6f9a6ff7cd6",
   )

@@ -6,7 +6,7 @@
 
 source_dir=$(cd "$(dirname "$0")"; pwd -P)
 
-copybara_exe=copybara
+copybara_exe="java -jar $source_dir/copybara_deploy.jar"
 copybara_file="$source_dir/copy.bara.sky"
 init_history=''
 
@@ -117,6 +117,6 @@ else
 fi
 
 message "Pushing changes to GitHub..."
-git push -f copybara_remote master
+git push -f copybara_remote main
 
 success "CppGC GitHub mirror was successfully updated"
