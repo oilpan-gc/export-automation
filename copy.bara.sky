@@ -40,7 +40,7 @@ core.workflow(
         core.copy(before = "include/cppgc/README.md", after = "README.md"),
         core.replace(
             before = '#include "testing/gtest/include/gtest/gtest_prod.h"  // nogncheck',
-            after = '#include "gtest/gtest_prod.h"',
+            after = '#include <gtest/gtest_prod.h>',
             paths = glob(["src/**/*.cc", "src/**/*.h"]),
         ),
         core.replace(
