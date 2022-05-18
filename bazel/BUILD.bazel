@@ -1,3 +1,5 @@
+load("@bazel_skylib//rules:common_settings.bzl", "bool_flag")
+
 config_setting(
     name = "linux_x86_64",
     constraint_values = [
@@ -20,6 +22,13 @@ config_setting(
         "@platforms//os:macos",
         "@platforms//cpu:arm64",
     ],
+)
+
+config_setting(
+    name = "is_debug",
+    values = {
+        "compilation_mode": "dbg",
+    },
 )
 
 # TODO: Support all the platforms v8 does.
@@ -53,6 +62,26 @@ PLATFORM_SRCS = select({
   ],
 })
 
+SHARED_COPTS = [
+    "-DCPPGC_IS_STANDALONE",
+    # TODO(crbug.com/1325007): Enable -DCPPGC_POINTER_COMPRESSION when ready (requires caged heap)
+]
+
+PLATFORM_COPTS = select({
+  ":linux_x86_64": [
+    "-DCPPGC_CAGED_HEAP",
+    "-DCPPGC_YOUNG_GENERATION",
+  ],
+  ":macos_x86_64": [
+    "-DCPPGC_CAGED_HEAP",
+    "-DCPPGC_YOUNG_GENERATION",
+  ],
+  ":macos_arm64": [
+    "-DCPPGC_CAGED_HEAP",
+    "-DCPPGC_YOUNG_GENERATION",
+  ],
+})
+
 PLATFORM_LINKOPTS = select({
   ":linux_x86_64": [
     "-lpthread",
@@ -63,6 +92,13 @@ PLATFORM_LINKOPTS = select({
   ":macos_arm64": [
     "-lpthread",
   ],
+})
+
+DEBUG_COPTS = select({
+  ":is_debug": [
+    "-DCPPGC_ENABLE_VERIFY_HEAP"
+  ],
+  "//conditions:default": []
 })
 
 cc_library(
@@ -87,12 +123,8 @@ cc_library(
       "src/heap/base/asm/**/*.cc",
     ]
   ) + PLATFORM_SRCS,
-  # TODO: Enforce -std=c++14
-  # TODO: Support -DCPPGC_ENABLE_OBJECT_NAMES, -DCPPGC_YOUNG_GENERATION and -DCPPGC_ENABLE_VERIFY_HEAP as features?
-  copts = [
-    "-DCPPGC_CAGED_HEAP", # NOTE: This is only supported on 64bit targets
-    "-DCPPGC_IS_STANDALONE",
-  ],
+  # TODO: Enforce -std=c++17
+  copts = SHARED_COPTS + PLATFORM_COPTS + DEBUG_COPTS,
   linkopts = PLATFORM_LINKOPTS,
   deps = [
     "@com_google_googletest//:gtest_prod",
@@ -106,4 +138,17 @@ cc_binary(
   deps = [":cppgc"]
 )
 
-# TODO: Port tests to bazel
+cc_test(
+  name = "cppgc_tests",
+  srcs = glob([
+    "test/unittests/heap/cppgc/*.h",
+    "test/unittests/heap/cppgc/*.cc",
+  ]),
+  copts = SHARED_COPTS + PLATFORM_COPTS,
+  linkopts = PLATFORM_LINKOPTS,
+  deps = [
+    ":cppgc",
+    "@com_google_googletest//:gtest",
+  ],
+)
+

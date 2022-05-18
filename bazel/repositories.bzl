@@ -1,7 +1,7 @@
 load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
 load("@bazel_tools//tools/build_defs/repo:utils.bzl", "maybe")
 
-def cppgc_deps():
+def cppgc_repositories():
   maybe(
       repo_rule = http_archive,
       name = "platforms",

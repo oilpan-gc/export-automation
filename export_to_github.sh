@@ -92,12 +92,12 @@ cd $git_temp_dir
 
 cp "$source_dir/bazel/BUILD.bazel" "$git_temp_dir/BUILD.bazel"
 cp "$source_dir/bazel/WORKSPACE" "$git_temp_dir/WORKSPACE"
-cp "$source_dir/bazel/deps.bzl" "$git_temp_dir/deps.bzl"
+cp "$source_dir/bazel/repositories.bzl" "$git_temp_dir/repositories.bzl"
 cp "$source_dir/bazel/bazelrc" "$git_temp_dir/.bazelrc"
 
 if git status -s | grep -q BUILD.bazel; then
   message "BUILD.bazel needs to be changed"
-  git add "$git_temp_dir/BUILD.bazel" "$git_temp_dir/WORKSPACE" "$git_temp_dir/deps.bzl" "$git_temp_dir/.bazelrc"
+  git add "$git_temp_dir/BUILD.bazel" "$git_temp_dir/WORKSPACE" "$git_temp_dir/repositories.bzl" "$git_temp_dir/.bazelrc"
   git commit --amend --no-edit > /dev/null
 else
   message "No changes in BUILD.bazel need to be done"

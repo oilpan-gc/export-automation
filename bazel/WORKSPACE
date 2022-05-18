@@ -1,5 +1,5 @@
 workspace(name = "cppgc")
 
-load("@cppgc//:deps.bzl", "cppgc_deps")
+load("@cppgc//:repositories.bzl", "cppgc_repositories")
 
-cppgc_deps()
+cppgc_repositories()
