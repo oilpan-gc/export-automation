@@ -103,6 +103,16 @@ else
   message "No changes in BUILD.bazel need to be done"
 fi
 
+cp "$source_dir/github/tests.yml" "$git_temp_dir/.github/workflows/tests.yml"
+
+if git status -s | grep -q .github; then
+  message "Workflow needs to be changed"
+  git add "$git_temp_dir/.github/workflows/tests.yml"
+  git commit --amend --no-edit > /dev/null
+else
+  message "No changes in workflows need to be done"
+fi
+
 chromium_trace_common_header="$git_temp_dir/src/base/chromium/trace_event_common.h"
 
 mkdir -p $(dirname $chromium_trace_common_header)

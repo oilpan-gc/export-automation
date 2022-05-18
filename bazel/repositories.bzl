@@ -27,5 +27,3 @@ def cppgc_repositories():
     ],
     sha256 = "f7be3474d42aae265405a592bb7da8e171919d74c16f082a5457840f06054728",
   )
-  load("@bazel_skylib//:workspace.bzl", "bazel_skylib_workspace")
-  bazel_skylib_workspace()

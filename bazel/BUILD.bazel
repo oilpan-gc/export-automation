@@ -144,7 +144,7 @@ cc_test(
     "test/unittests/heap/cppgc/*.h",
     "test/unittests/heap/cppgc/*.cc",
   ]),
-  copts = SHARED_COPTS + PLATFORM_COPTS,
+  copts = SHARED_COPTS + PLATFORM_COPTS + DEBUG_COPTS,
   linkopts = PLATFORM_LINKOPTS,
   deps = [
     ":cppgc",
