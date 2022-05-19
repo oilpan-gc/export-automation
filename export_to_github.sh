@@ -103,6 +103,7 @@ else
   message "No changes in BUILD.bazel need to be done"
 fi
 
+mkdir -p "$git_temp_dir/.github/workflows"
 cp "$source_dir/github/tests.yml" "$git_temp_dir/.github/workflows/tests.yml"
 
 if git status -s | grep -q .github; then
