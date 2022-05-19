@@ -48,6 +48,7 @@ PLATFORM_SRCS = select({
     "src/base/platform/platform-posix-time.cc",
     "src/base/platform/platform-posix-time.h",
     "src/base/debug/stack_trace_posix.cc",
+    "src/base/platform/platform-darwin.cc",
     "src/base/platform/platform-macos.cc",
     "src/heap/base/asm/x64/push_registers_asm.cc",
   ],
@@ -57,28 +58,29 @@ PLATFORM_SRCS = select({
     "src/base/platform/platform-posix-time.cc",
     "src/base/platform/platform-posix-time.h",
     "src/base/debug/stack_trace_posix.cc",
+    "src/base/platform/platform-darwin.cc",
     "src/base/platform/platform-macos.cc",
     "src/heap/base/asm/arm64/push_registers_asm.cc",
   ],
 })
 
-SHARED_COPTS = [
-    "-DCPPGC_IS_STANDALONE",
+SHARED_DEFINES = [
+    "CPPGC_IS_STANDALONE",
     # TODO(crbug.com/1325007): Enable -DCPPGC_POINTER_COMPRESSION when ready (requires caged heap)
 ]
 
-PLATFORM_COPTS = select({
+PLATFORM_DEFINES = select({
   ":linux_x86_64": [
-    "-DCPPGC_CAGED_HEAP",
-    "-DCPPGC_YOUNG_GENERATION",
+    "CPPGC_CAGED_HEAP",
+    "CPPGC_YOUNG_GENERATION",
   ],
   ":macos_x86_64": [
-    "-DCPPGC_CAGED_HEAP",
-    "-DCPPGC_YOUNG_GENERATION",
+    "CPPGC_CAGED_HEAP",
+    "CPPGC_YOUNG_GENERATION",
   ],
   ":macos_arm64": [
-    "-DCPPGC_CAGED_HEAP",
-    "-DCPPGC_YOUNG_GENERATION",
+    "CPPGC_CAGED_HEAP",
+    "CPPGC_YOUNG_GENERATION",
   ],
 })
 
@@ -124,7 +126,8 @@ cc_library(
     ]
   ) + PLATFORM_SRCS,
   # TODO: Enforce -std=c++17
-  copts = SHARED_COPTS + PLATFORM_COPTS + DEBUG_COPTS,
+  copts = DEBUG_COPTS,
+  defines = SHARED_DEFINES + PLATFORM_DEFINES,
   linkopts = PLATFORM_LINKOPTS,
   deps = [
     "@com_google_googletest//:gtest_prod",
@@ -144,7 +147,7 @@ cc_test(
     "test/unittests/heap/cppgc/*.h",
     "test/unittests/heap/cppgc/*.cc",
   ]),
-  copts = SHARED_COPTS + PLATFORM_COPTS + DEBUG_COPTS,
+  copts = DEBUG_COPTS,
   linkopts = PLATFORM_LINKOPTS,
   deps = [
     ":cppgc",

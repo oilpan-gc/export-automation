@@ -29,7 +29,7 @@ core.workflow(
     name='default',
     origin=git.origin(
         url=origin_url,
-        ref='master',
+        ref='main',
     ),
     destination=git.destination(url=destination_url, push='main'),
     origin_files=glob(INTERESTING_PATHS,
@@ -58,11 +58,6 @@ core.workflow(
             before = '#include "testing/gmock/include/gmock/gmock-matchers.h"',
             after = '#include <gmock/gmock-matchers.h>',
             paths = glob(["test/**/*.cc", "test/**/*.h"]),
-        ),
-        core.replace(
-            before = '#include <include/cppgc/default-platform.h>',
-            after = '#include "cppgc/default-platform.h"',
-            paths = glob(["src/**/*.cc", "src/**/*.h"]),
         ),
         core.replace(
             before = '#include "base/trace_event/common/trace_event_common.h"',
