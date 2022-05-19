@@ -1,5 +1,5 @@
 #!/bin/sh
-#
+
 # Copyright 2020 the V8 project authors. All rights reserved.
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
@@ -8,7 +8,7 @@ source_dir=$(cd "$(dirname "$0")"; pwd -P)
 
 copybara_exe="java -jar $source_dir/copybara_deploy.jar"
 copybara_file="$source_dir/copy.bara.sky"
-init_history=''
+copybara_flags=''
 
 for arg in "$@"; do
   case $arg in
@@ -21,19 +21,22 @@ for arg in "$@"; do
       shift
       ;;
     --init-history)
-      init_history='--init-history --force'
+      copybara_flags="$copybara_flags --init-history"
+      shift
+      ;;
+    --force)
+      copybara_flags="$copybara_flags --force"
       shift
       ;;
     *)
       echo -e "Usage:$arg"
       echo -e "    export_to_github.sh [--copybara-exe=<path-to-copybara>]\n" \
-              "                       [--copybara-file=<path-to-copy.bara.sky>]"
+              "                       [--copybara-file=<path-to-copy.bara.sky>]\n" \
+              "                       [--init-history]\n" \
+              "                       [--force]"
       exit 1
   esac
 done
-
-v8_origin="https://chromium.googlesource.com/v8/v8.git"
-v8_ref="master"
 
 NOCOLOR="\033[0m"
 RED="\033[0;31m"
@@ -41,17 +44,17 @@ GREEN="\033[0;32m"
 BLUE="\033[0;34m"
 
 function fail {
-  echo -e "${RED}${1}${NOCOLOR}" > /dev/stderr
+  echo "${RED}${1}${NOCOLOR}" > /dev/stderr
   exit 1
 }
 
 function success {
-  echo -e "${BLUE}${1}${NOCOLOR}" > /dev/stderr
+  echo "${BLUE}${1}${NOCOLOR}" > /dev/stderr
   exit 0
 }
 
 function message {
-  echo -e "${GREEN}${1}${NOCOLOR}" > /dev/stderr
+  echo "${GREEN}${1}${NOCOLOR}" > /dev/stderr
 }
 
 function cleanup {
@@ -63,7 +66,6 @@ function cleanup {
 trap "exit 1" HUP INT PIPE QUIT TERM
 trap cleanup EXIT
 
-# [ ! -x $copybara_exe ] && fail "$copybara_exe doesn't exist or was not found in PATH!"
 [ ! -f $copybara_file ] && fail "Input $copybara_file doesn't exist!"
 
 git_temp_dir=$(mktemp -d)
@@ -71,16 +73,8 @@ if [[ ! "$git_temp_dir" || ! -d "$git_temp_dir" ]]; then
   fail "Failed to create temporary dir"
 fi
 
-if [[ $init_history ]]; then
-  read -p "--init-history is only supposed to be used on the first export of \
-cppgc. Is this what is really intended? (y/N)" answer
-  if [ "$answer" != "y" ]; then
-    exit 0
-  fi
-fi
-
 message "Running copybara..."
-$copybara_exe $init_history $copybara_file --dry-run --git-destination-path $git_temp_dir
+$copybara_exe $copybara_flags $copybara_file --dry-run --git-destination-path $git_temp_dir
 result=$?
 if [ "$result" -eq 4 ]; then
   success "Nothing needs to be done, exiting..."
@@ -90,42 +84,13 @@ fi
 
 cd $git_temp_dir
 
-cp "$source_dir/bazel/BUILD.bazel" "$git_temp_dir/BUILD.bazel"
-cp "$source_dir/bazel/WORKSPACE" "$git_temp_dir/WORKSPACE"
-cp "$source_dir/bazel/repositories.bzl" "$git_temp_dir/repositories.bzl"
-cp "$source_dir/bazel/bazelrc" "$git_temp_dir/.bazelrc"
-
-if git status -s | grep -q BUILD.bazel; then
-  message "BUILD.bazel needs to be changed"
-  git add "$git_temp_dir/BUILD.bazel" "$git_temp_dir/WORKSPACE" "$git_temp_dir/repositories.bzl" "$git_temp_dir/.bazelrc"
-  git commit --amend --no-edit > /dev/null
-else
-  message "No changes in BUILD.bazel need to be done"
-fi
-
-mkdir -p "$git_temp_dir/.github/workflows"
-cp "$source_dir/github/tests.yml" "$git_temp_dir/.github/workflows/tests.yml"
-
-if git status -s | grep -q .github; then
-  message "Workflow needs to be changed"
-  git add "$git_temp_dir/.github/workflows/tests.yml"
-  git commit --amend --no-edit > /dev/null
-else
-  message "No changes in workflows need to be done"
-fi
-
 chromium_trace_common_header="$git_temp_dir/src/base/chromium/trace_event_common.h"
 
 mkdir -p $(dirname $chromium_trace_common_header)
 curl "https://raw.githubusercontent.com/chromium/chromium/main/base/trace_event/common/trace_event_common.h" -SLo "$chromium_trace_common_header"
 
-if git status -s | grep -q chromium; then
-  message "trace_event_common.h needs to be changed"
-  git add "$chromium_trace_common_header"
-  git commit --amend --no-edit > /dev/null
-else
-  message "No changes in trace_event_common.h need to be done"
-fi
+git add "$chromium_trace_common_header"
+git commit --amend --no-edit --allow-empty
 
 message "Pushing changes to GitHub..."
 git push -f copybara_remote main

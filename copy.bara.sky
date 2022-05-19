@@ -20,6 +20,15 @@ INTERESTING_PATHS = [
     'test/unittests/heap/cppgc/**',
 ]
 
+GITHUB_ONLY_PATHS = [
+    '.gitignore',
+    'BUILD.bazel',
+    'WORKSPACE',
+    '.bazelrc',
+    'repositories.bzl',
+    '.github/workflows/tests.yml',
+]
+
 origin_url = 'https://chromium.googlesource.com/v8/v8.git'
 # TODO(v8:10724): Add GitHub destination url.
 destination_url = 'git@github.com:oilpan-gc/cppgc.git'
@@ -34,7 +43,7 @@ core.workflow(
     destination=git.destination(url=destination_url, push='main'),
     origin_files=glob(INTERESTING_PATHS,
                       exclude=['samples/cppgc/cppgc-for-v8-embedders.cc']),
-    destination_files=glob(['**'], exclude=['CMakeLists.txt', 'cmake/**']),
+    destination_files=glob(['**'], exclude=GITHUB_ONLY_PATHS),
     mode='SQUASH',
     authoring=authoring.pass_thru('V8 Team <v8-dev@googlegroups.com>'),
     transformations=[
